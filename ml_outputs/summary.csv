@@ -1,0 +1,4 @@
+model,accuracy,near_optimal_rate,avg_regret_mops,fixed_queue
+best_fixed,0.5,0.375,92.79599984583332,sfq
+random_forest,1.0,0.875,0.0,
+logistic_regression,0.9166666666666666,0.7916666666666666,4.268256916666666,

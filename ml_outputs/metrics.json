@@ -1,0 +1,173 @@
+[
+  {
+    "name": "best_fixed",
+    "accuracy": 0.5,
+    "near_optimal_rate": 0.375,
+    "avg_regret_mops": 92.79599984583332,
+    "fixed_queue": "sfq",
+    "predictions": [
+      "sfq",
+      "sfq",
+      "sfq",
+      "sfq",
+      "sfq",
+      "sfq",
+      "sfq",
+      "sfq",
+      "sfq",
+      "sfq",
+      "sfq",
+      "sfq",
+      "sfq",
+      "sfq",
+      "sfq",
+      "sfq",
+      "sfq",
+      "sfq",
+      "sfq",
+      "sfq",
+      "sfq",
+      "sfq",
+      "sfq",
+      "sfq"
+    ]
+  },
+  {
+    "name": "random_forest",
+    "accuracy": 1.0,
+    "near_optimal_rate": 0.875,
+    "avg_regret_mops": 0.0,
+    "classification_report": {
+      "broker": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 12.0
+      },
+      "sfq": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 12.0
+      },
+      "accuracy": 1.0,
+      "macro avg": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 24.0
+      },
+      "weighted avg": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 24.0
+      }
+    },
+    "confusion_matrix": [
+      [
+        12,
+        0
+      ],
+      [
+        0,
+        12
+      ]
+    ],
+    "predictions": [
+      "sfq",
+      "broker",
+      "sfq",
+      "broker",
+      "broker",
+      "sfq",
+      "sfq",
+      "sfq",
+      "sfq",
+      "sfq",
+      "sfq",
+      "sfq",
+      "sfq",
+      "broker",
+      "broker",
+      "broker",
+      "broker",
+      "broker",
+      "broker",
+      "broker",
+      "sfq",
+      "sfq",
+      "broker",
+      "broker"
+    ]
+  },
+  {
+    "name": "logistic_regression",
+    "accuracy": 0.9166666666666666,
+    "near_optimal_rate": 0.7916666666666666,
+    "avg_regret_mops": 4.268256916666666,
+    "classification_report": {
+      "broker": {
+        "precision": 1.0,
+        "recall": 0.8333333333333334,
+        "f1-score": 0.9090909090909091,
+        "support": 12.0
+      },
+      "sfq": {
+        "precision": 0.8571428571428571,
+        "recall": 1.0,
+        "f1-score": 0.9230769230769231,
+        "support": 12.0
+      },
+      "accuracy": 0.9166666666666666,
+      "macro avg": {
+        "precision": 0.9285714285714286,
+        "recall": 0.9166666666666667,
+        "f1-score": 0.916083916083916,
+        "support": 24.0
+      },
+      "weighted avg": {
+        "precision": 0.9285714285714285,
+        "recall": 0.9166666666666666,
+        "f1-score": 0.9160839160839161,
+        "support": 24.0
+      }
+    },
+    "confusion_matrix": [
+      [
+        10,
+        2
+      ],
+      [
+        0,
+        12
+      ]
+    ],
+    "predictions": [
+      "sfq",
+      "broker",
+      "sfq",
+      "broker",
+      "broker",
+      "sfq",
+      "sfq",
+      "sfq",
+      "sfq",
+      "sfq",
+      "sfq",
+      "sfq",
+      "sfq",
+      "broker",
+      "broker",
+      "broker",
+      "broker",
+      "broker",
+      "sfq",
+      "sfq",
+      "sfq",
+      "sfq",
+      "broker",
+      "broker"
+    ]
+  }
+]
