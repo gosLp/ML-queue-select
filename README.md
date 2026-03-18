@@ -32,24 +32,28 @@ The system provides:
 
 # Build Benchmarks
 
+```
+mkdir -p out/
+```
+
 compile each separately using `hipcc`
 
 ## WFQ 
 
 ```
-hipcc -O3 -std=c++17 -DWFQ queue_bench.cpp -o queue_bench_wfq
+hipcc -O3 -std=c++17 -DWFQ queue_bench.cpp -o out/queue_bench_wfq
 ```
 
 ## SFQ 
 
 ```
-hipcc -O3 -std=c++17 -DSFQ queue_bench.cpp -o queue_bench_sfq
+hipcc -O3 -std=c++17 -DSFQ queue_bench.cpp -o out/queue_bench_sfq
 ```
 
 ## BROKER 
 
 ```
-hipcc -O3 -std=c++17 -DBROKER queue_bench.cpp -o queue_bench_broker
+hipcc -O3 -std=c++17 -DBROKER queue_bench.cpp -o out/queue_bench_broker
 ```
 
 # Running a Single Benchmark
@@ -90,7 +94,7 @@ This is what the Python pipeline consumes
 Use the experiments harness:
 ```
 python run_experiments.py \
-  --binaries ./queue_bench_wfq,./queue_bench_sfq,./queue_bench_broker
+  --binaries ./out/queue_bench_wfq,./out/queue_bench_sfq,./out/queue_bench_broker
 ```
 
 ## Example : Small Pilot Run
