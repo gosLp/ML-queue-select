@@ -1,128 +1,104 @@
-// sfqueue_hip.hpp - Native HIP implementation of SFQ (Slot-based FIFO Queue)
-// This is the header file that matches your naming convention
-
+// #endif // SFQUEUE_HIP_H
 #ifndef SFQUEUE_HIP_H
 #define SFQUEUE_HIP_H
 
 #include <hip/hip_runtime.h>
 #include <stdint.h>
+#include <limits.h>
 
-//=============================================================================
-// SFQ CONFIGURATION - Matching your OpenCL version
-//=============================================================================
+// Faithful to the queue structure/interfaces in Figure 4 of
+// Scogland & Feng, "Design and Evaluation of Scalable Concurrent Queues
+// for Many-Core Architectures" (ICPE 2015), adapted to HIP.
+
 #ifndef SFQ_QUEUE_LENGTH
-// #define SFQ_QUEUE_LENGTH 65536
-#define SFQ_QUEUE_LENGTH 131072
-#define SFQ_QUEUE_FACTOR 16
+#define SFQ_QUEUE_LENGTH 65536u
 #endif
 
-#ifndef SFQ_WORK
-#define SFQ_WORK 100
+#ifndef SFQ_MAX_THREADS
+// Must satisfy: MAX_ID >= 2 * (MAX_THREADS + 1)
+#define SFQ_MAX_THREADS 65535u
 #endif
 
-#define SFQ_QUEUE_MASK (SFQ_QUEUE_LENGTH - 1)
-#define SFQ_QUEUE_SMASK ((1U << (32 - SFQ_QUEUE_FACTOR)) - 1)
-#define SFQ_GET_TARGET(H, Q) ((H) & SFQ_QUEUE_MASK)
-
-#define SFQ_NULL_1 UINT32_MAX
-#define SFQ_NULL_0 (UINT32_MAX-1)
-#define SFQ_EMPTY 0
-
-#ifndef SFQ_FAILSAFE
-#define SFQ_FAILSAFE 10000
+#ifndef SFQ_BACKOFF_ITERS
+#define SFQ_BACKOFF_ITERS 2048
 #endif
 
-#define SFQ_TEST_FAILSAFE (fail < SFQ_FAILSAFE)
+#define SFQ_EMPTY 0ull
 
-//=============================================================================
-// HIP ATOMIC OPERATIONS - Native versions
-//=============================================================================
-#define SFQ_ATOMIC_LOAD(ptr) __atomic_load_n(ptr, __ATOMIC_ACQUIRE)
-#define SFQ_ATOMIC_STORE(ptr, val) __atomic_store_n(ptr, val, __ATOMIC_RELEASE)
-#define SFQ_ATOMIC_CAS(ptr, expected, desired) \
-    __atomic_compare_exchange_n(ptr, &(expected), desired, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)
-#define SFQ_ATOMIC_ADD(ptr, val) __atomic_fetch_add(ptr, val, __ATOMIC_SEQ_CST)
-#define SFQ_ATOMIC_XCHG(ptr, val) __atomic_exchange_n(ptr, val, __ATOMIC_SEQ_CST)
-#define SFQ_FENCE() __atomic_thread_fence(__ATOMIC_SEQ_CST)
+#define SFQ_SUCCESS 0
+#define SFQ_BUSY    1
+#define SFQ_CLOSED  2
 
-//=============================================================================
-// SFQ QUEUE STRUCTURE - Direct conversion from your OpenCL version
-//=============================================================================
+#define SFQ_MAX_DISTANCE (SFQ_QUEUE_LENGTH + SFQ_MAX_THREADS)
+
+// GET_ID from the paper: number of complete passes through the ring, times 2.
+#define SFQ_GET_ID(x) (((x) / SFQ_QUEUE_LENGTH) * 2u)
+
+// Chosen so that when 32-bit head/tail roll over to zero, the slot id rolls to zero too.
+// For power-of-two queue sizes this becomes 2^(33 - log2(QUEUE_SIZE)).
+#define SFQ_MAX_ID (2u * ((UINT32_MAX / SFQ_QUEUE_LENGTH) + 1u))
+
+#if ((SFQ_QUEUE_LENGTH & (SFQ_QUEUE_LENGTH - 1u)) != 0)
+#error "SFQ_QUEUE_LENGTH must be a power of two."
+#endif
+
+#if (SFQ_MAX_ID < (2u * (SFQ_MAX_THREADS + 1u)))
+#error "SFQ_MAX_ID invariant violated: reduce SFQ_MAX_THREADS or queue length."
+#endif
+
+#if (SFQ_MAX_DISTANCE >= 0x80000000u)
+#error "SFQ_MAX_DISTANCE must be < 2^31 for single-counter rollover detection."
+#endif
+
 struct sfq_queue {
-    volatile uint32_t head;
-    volatile uint32_t tail; 
-    volatile uint32_t vnull;
-    volatile uint32_t done;
-    union {
-        volatile uint32_t items[SFQ_QUEUE_LENGTH];
-        volatile uint32_t nodes[SFQ_QUEUE_LENGTH];
-    };
-    volatile uint32_t slots[SFQ_QUEUE_LENGTH];
-    uint32_t nprocs;  // For compatibility with test framework
+    uint32_t head;
+    uint32_t tail;
+    uint32_t closed;
+    uint32_t _pad0;
+    uint32_t items[SFQ_QUEUE_LENGTH];
+    uint32_t ids[SFQ_QUEUE_LENGTH];
+    uint32_t nprocs;
 };
 
-// Handle structure for compatibility with test interface
 struct sfq_handle {
-    uint32_t thread_id;  // Simple thread identification
-    uint32_t dummy[15];  // Padding to match wf_handle size roughly
+    uint32_t thread_id;
+    uint32_t dummy[15];
 };
 
-//=============================================================================
-// DEVICE FUNCTION DECLARATIONS
-//=============================================================================
-
-// Main API functions
-__device__ void sfq_enqueue(sfq_queue* q, sfq_handle* h, uint64_t v);
+// Main compatibility API used by your harness.
+__device__ void     sfq_enqueue(sfq_queue* q, sfq_handle* h, uint64_t v);
 __device__ uint64_t sfq_dequeue(sfq_queue* q, sfq_handle* h);
 
-// Core SFQ operations
-__device__ int sfq_enqueue_slot(sfq_queue* q, uint32_t item);
-__device__ int sfq_dequeue_slot(sfq_queue* q, uint32_t* p);
-__device__ int sfq_enqueue_nb_slot(sfq_queue* q, uint32_t item);
-__device__ int sfq_dequeue_nb_slot(sfq_queue* q, uint32_t* p);
+// Faithful paper-style interfaces.
+__device__ int sfq_enqueue_blocking_u32(sfq_queue* q, uint32_t item);
+__device__ int sfq_dequeue_blocking_u32(sfq_queue* q, uint32_t* out);
+__device__ int sfq_enqueue_nb_u32(sfq_queue* q, uint32_t item);
+__device__ int sfq_dequeue_nb_u32(sfq_queue* q, uint32_t* out);
 
-// Initialization functions  
+// Optional helpers.
+__device__ void sfq_close(sfq_queue* q);
+__device__ int  sfq_is_closed(const sfq_queue* q);
+
 __device__ void sfq_queue_init(sfq_queue* q, uint32_t nprocs);
-__device__ void sfq_handle_init(sfq_handle* h, sfq_queue* q, sfq_handle* next_handle, 
-                               sfq_handle* enq_helper, sfq_handle* deq_helper);
+__device__ void sfq_handle_init(sfq_handle* h, uint32_t tid);
 
-//=============================================================================
-// KERNEL FUNCTION DECLARATIONS
-//=============================================================================
-
-// Initialization kernels
-// __global__ void sfq_init_kernel(sfq_queue* q, sfq_handle* handles, int num_threads);
-void sfq_queue_reset(sfq_queue* d_q, sfq_handle* d_handles, int num_threads);
-
-// Validation and debugging kernels
+__global__ void sfq_init_kernel(sfq_queue* q, sfq_handle* handles, int num_threads);
+__global__ void sfq_simple_test_kernel(sfq_queue* q, sfq_handle* handles,
+                                       uint64_t* results, int num_threads,
+                                       int ops_per_thread);
+__global__ void sfq_high_contention_kernel(sfq_queue* q, sfq_handle* handles,
+                                           uint64_t* results, int num_threads,
+                                           int ops_per_thread);
+__global__ void sfq_memory_stress_kernel(sfq_queue* q, sfq_handle* handles,
+                                         uint64_t* results, int num_threads,
+                                         int ops_per_thread);
+__global__ void sfq_performance_test_kernel(sfq_queue* q, sfq_handle* handles,
+                                            uint64_t* results,
+                                            int operations_per_thread,
+                                            int test_type);
 __global__ void sfq_validate_kernel(sfq_queue* q, sfq_handle* handles, int num_threads);
 
-// Test kernels (these match the generic interface)
-__global__ void sfq_simple_test_kernel(sfq_queue* q, sfq_handle* handles, 
-                                      uint64_t* test_data, int num_ops);
-
-__global__ void sfq_performance_test_kernel(sfq_queue* q, sfq_handle* handles, 
-                                           uint64_t* results, int operations_per_thread,
-                                           int test_type);
-
-// reset kernels
-__global__ void sfq_reset_kernel(sfq_queue* q, sfq_handle* h, int num_threads);
-
-//=============================================================================
-// HOST FUNCTION DECLARATIONS
-//=============================================================================
-
-// Host-side initialization
 void sfq_queue_host_init(sfq_queue** d_q, sfq_handle** d_handles, int num_threads);
-// Host-side destroy (used by unified test harness)
 void sfq_queue_destroy(sfq_queue* d_q, sfq_handle* d_h);
-void sfq_queue_reset(sfq_queue* d_q, sfq_handle* d_handles, int num_threads);
-
-
-//=============================================================================
-// DEBUG FUNCTIONS
-//=============================================================================
-__device__ void sfq_print_queue_state(sfq_queue* q);
-__device__ void sfq_print_handle_state(sfq_handle* h, int tid);
 
 #endif // SFQUEUE_HIP_H
