@@ -762,8 +762,3 @@ static inline void wf_queue_host_init_for_bfs(
 static inline void wf_queue_host_init(wf_queue** d_q, wf_handle** d_handles, int num_threads) {
     wf_queue_host_init_ex(d_q, d_handles, num_threads, WF_PREALLOC_OPS_PER_THREAD);
 }
-
-static inline void wf_queue_destroy(wf_queue* d_q, wf_handle* d_handles) {
-    if (d_q) hipFree(d_q);
-    if (d_handles) hipFree(d_handles);
-}

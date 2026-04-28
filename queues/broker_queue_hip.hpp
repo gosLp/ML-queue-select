@@ -65,11 +65,12 @@ static inline void broker_queue_destroy(broker_queue* d_q,
     if (d_handles) hipFree(d_handles);
 }
 
-__device__ __forceinline__ void broker_enqueue(broker_queue* q,
-                                               broker_handle*,
-                                               uint64_t v) {
+__device__ __forceinline__ bq::QueueStatus broker_enqueue(broker_queue* q,
+                                                          broker_handle*,
+                                                          uint64_t v) {
     auto s = q->enqueue(v);
-    (void)s;
+    // (void)s;
+    return s;
 }
 
 __device__ __forceinline__ uint64_t broker_dequeue(broker_queue* q,
