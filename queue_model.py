@@ -43,8 +43,6 @@ def build_preprocessor() -> ColumnTransformer:
 
 
 def make_producer_ratio_bucket(series: pd.Series) -> pd.Series:
-    # Proposal says stratified by producer-ratio bucket.
-    # If producer_ratio already takes discrete values like 0,25,50,75,100 this preserves them.
     return series.astype(str)
 
 
@@ -107,9 +105,6 @@ def baseline_random(df_eval: pd.DataFrame, queues: List[str], random_state: int)
 
 
 def baseline_rule_of_thumb(df_eval: pd.DataFrame, queues: List[str]) -> List[str]:
-    # Simple threshold selector per proposal idea.
-    # If both broker and sfq are present, choose broker for high producer ratio else sfq.
-    # Otherwise fall back to first queue.
     if "broker" in queues and "sfq" in queues:
         return [
             "broker" if float(row["producer_ratio"]) > 50 else "sfq"
@@ -169,7 +164,6 @@ def cross_validate_models(
     y = df["best_queue"]
     strat = make_producer_ratio_bucket(df["producer_ratio"])
 
-    # Combine y and producer-ratio bucket so CV stratification honors both label and proposal bucket idea.
     combined_strat = y.astype(str) + "__" + strat.astype(str)
 
     skf = StratifiedKFold(n_splits=cv_folds, shuffle=True, random_state=random_state)
@@ -311,9 +305,9 @@ def main():
     print(cv_summary.to_string(index=False))
 
     out_dir = input_path.parent
-    holdout_df.to_csv(out_dir / "proposal_holdout_results.csv", index=False)
-    cv_df.to_csv(out_dir / "proposal_cv_results.csv", index=False)
-    cv_summary.to_csv(out_dir / "proposal_cv_summary.csv", index=False)
+    holdout_df.to_csv(out_dir / "results.csv", index=False)
+    cv_df.to_csv(out_dir / "ML_results.csv", index=False)
+    cv_summary.to_csv(out_dir / "ML_summary.csv", index=False)
 
 
 if __name__ == "__main__":
