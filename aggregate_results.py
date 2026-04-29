@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import glob
 import math
 import statistics
 from collections import defaultdict
@@ -101,6 +102,26 @@ def safe_block(row: Dict[str, Any]) -> Optional[int]:
 def read_csv(path: Path) -> List[Dict[str, Any]]:
     with path.open("r", newline="", encoding="utf-8") as f:
         return list(csv.DictReader(f))
+
+
+def expand_input_paths(inputs: List[str]) -> List[Path]:
+    paths: List[Path] = []
+    for raw in inputs:
+        matches = sorted(glob.glob(raw))
+        if matches:
+            paths.extend(Path(m) for m in matches)
+        else:
+            paths.append(Path(raw))
+
+    unique_paths: List[Path] = []
+    seen = set()
+    for path in paths:
+        resolved = path.resolve()
+        if resolved in seen:
+            continue
+        seen.add(resolved)
+        unique_paths.append(path)
+    return unique_paths
 
 
 def write_csv(path: Path, rows: List[Dict[str, Any]]) -> None:
@@ -327,6 +348,7 @@ def main() -> int:
     parser.add_argument(
         "--input",
         required=True,
+        nargs="+",
         help="Input CSV from run_experiments.py",
     )
     parser.add_argument(
@@ -359,25 +381,33 @@ def main() -> int:
 
     args = parser.parse_args()
 
-    input_path = Path(args.input)
-    if not input_path.exists():
-        print(f"Input file not found: {input_path}")
+    input_paths = expand_input_paths(args.input)
+    missing = [str(path) for path in input_paths if not path.exists()]
+    if missing:
+        print("Input file not found:")
+        for path in missing:
+            print(f"  {path}")
         return 1
 
     queue_order = parse_csv_strings(args.queues)
     allowed_queues = set(queue_order)
 
-    out_dir = Path(args.out_dir) if args.out_dir else input_path.parent
+    out_dir = Path(args.out_dir) if args.out_dir else input_paths[0].parent
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    default_prefix = input_path.stem + "_agg"
+    if len(input_paths) == 1:
+        default_prefix = input_paths[0].stem + "_agg"
+    else:
+        default_prefix = "queue_sweeps_agg"
     out_prefix = args.out_prefix if args.out_prefix else default_prefix
 
     per_queue_path = out_dir / f"{out_prefix}_per_queue.csv"
     ml_path = out_dir / f"{out_prefix}_ml.csv"
     summary_path = out_dir / f"{out_prefix}_summary.csv"
 
-    raw_rows = read_csv(input_path)
+    raw_rows: List[Dict[str, Any]] = []
+    for input_path in input_paths:
+        raw_rows.extend(read_csv(input_path))
     kept_rows = group_successful_runs(raw_rows, allowed_queues)
     per_queue_rows = aggregate_per_queue(kept_rows, args.agg)
     ml_rows = pivot_ml_dataset(per_queue_rows, queue_order, args.min_success_queues)
@@ -387,6 +417,7 @@ def main() -> int:
     write_csv(ml_path, ml_rows)
     write_csv(summary_path, summary_rows)
 
+    print(f"Input files:                 {len(input_paths)}")
     print(f"Input rows:                  {len(raw_rows)}")
     print(f"Successful filtered rows:    {len(kept_rows)}")
     print(f"Per-queue aggregated rows:   {len(per_queue_rows)}")

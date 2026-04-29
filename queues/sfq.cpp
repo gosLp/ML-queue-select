@@ -389,10 +389,6 @@ void sfq_queue_host_init(sfq_queue** d_q, sfq_handle** d_handles, int num_thread
     }
 }
 
-void sfq_queue_reset(sfq_queue* d_q, sfq_handle* d_handles, int num_threads) {
-    sfq_queue_host_init(&d_q, &d_handles, num_threads);
-}
-
 void sfq_queue_destroy(sfq_queue* d_q, sfq_handle* d_h) {
     if (d_q) {
         (void)hipFree(d_q);

@@ -1,12 +1,11 @@
 [
   {
     "name": "best_fixed",
-    "accuracy": 0.5,
-    "near_optimal_rate": 0.375,
-    "avg_regret_mops": 92.79599984583332,
+    "accuracy": 0.5217391304347826,
+    "near_optimal_rate": 0.5217391304347826,
+    "avg_regret_mops": 59.81840413043478,
     "fixed_queue": "sfq",
     "predictions": [
-      "sfq",
       "sfq",
       "sfq",
       "sfq",
@@ -35,138 +34,162 @@
   {
     "name": "random_forest",
     "accuracy": 1.0,
-    "near_optimal_rate": 0.875,
+    "near_optimal_rate": 0.8260869565217391,
     "avg_regret_mops": 0.0,
     "classification_report": {
       "broker": {
         "precision": 1.0,
         "recall": 1.0,
         "f1-score": 1.0,
-        "support": 12.0
+        "support": 6.0
       },
       "sfq": {
         "precision": 1.0,
         "recall": 1.0,
         "f1-score": 1.0,
         "support": 12.0
+      },
+      "wfq": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 5.0
       },
       "accuracy": 1.0,
       "macro avg": {
         "precision": 1.0,
         "recall": 1.0,
         "f1-score": 1.0,
-        "support": 24.0
+        "support": 23.0
       },
       "weighted avg": {
         "precision": 1.0,
         "recall": 1.0,
         "f1-score": 1.0,
-        "support": 24.0
+        "support": 23.0
       }
     },
     "confusion_matrix": [
       [
+        6,
+        0,
+        0
+      ],
+      [
+        0,
         12,
         0
       ],
       [
         0,
-        12
+        0,
+        5
       ]
     ],
     "predictions": [
       "sfq",
       "broker",
       "sfq",
-      "broker",
-      "broker",
+      "sfq",
+      "sfq",
+      "wfq",
+      "sfq",
+      "sfq",
+      "wfq",
       "sfq",
       "sfq",
       "sfq",
+      "broker",
       "sfq",
-      "sfq",
-      "sfq",
-      "sfq",
-      "sfq",
-      "broker",
-      "broker",
-      "broker",
-      "broker",
-      "broker",
-      "broker",
       "broker",
       "sfq",
       "sfq",
       "broker",
-      "broker"
+      "wfq",
+      "wfq",
+      "broker",
+      "broker",
+      "wfq"
     ]
   },
   {
     "name": "logistic_regression",
-    "accuracy": 0.9166666666666666,
-    "near_optimal_rate": 0.7916666666666666,
-    "avg_regret_mops": 4.268256916666666,
+    "accuracy": 0.6521739130434783,
+    "near_optimal_rate": 0.6521739130434783,
+    "avg_regret_mops": 36.996965217391306,
     "classification_report": {
       "broker": {
-        "precision": 1.0,
-        "recall": 0.8333333333333334,
-        "f1-score": 0.9090909090909091,
-        "support": 12.0
+        "precision": 0.375,
+        "recall": 0.5,
+        "f1-score": 0.42857142857142855,
+        "support": 6.0
       },
       "sfq": {
-        "precision": 0.8571428571428571,
+        "precision": 1.0,
         "recall": 1.0,
-        "f1-score": 0.9230769230769231,
+        "f1-score": 1.0,
         "support": 12.0
       },
-      "accuracy": 0.9166666666666666,
+      "wfq": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 5.0
+      },
+      "accuracy": 0.6521739130434783,
       "macro avg": {
-        "precision": 0.9285714285714286,
-        "recall": 0.9166666666666667,
-        "f1-score": 0.916083916083916,
-        "support": 24.0
+        "precision": 0.4583333333333333,
+        "recall": 0.5,
+        "f1-score": 0.4761904761904762,
+        "support": 23.0
       },
       "weighted avg": {
-        "precision": 0.9285714285714285,
-        "recall": 0.9166666666666666,
-        "f1-score": 0.9160839160839161,
-        "support": 24.0
+        "precision": 0.6195652173913043,
+        "recall": 0.6521739130434783,
+        "f1-score": 0.6335403726708074,
+        "support": 23.0
       }
     },
     "confusion_matrix": [
       [
-        10,
-        2
+        3,
+        0,
+        3
       ],
       [
         0,
-        12
+        12,
+        0
+      ],
+      [
+        5,
+        0,
+        0
       ]
     ],
     "predictions": [
       "sfq",
-      "broker",
-      "sfq",
-      "broker",
-      "broker",
-      "sfq",
-      "sfq",
-      "sfq",
-      "sfq",
-      "sfq",
+      "wfq",
       "sfq",
       "sfq",
       "sfq",
       "broker",
-      "broker",
-      "broker",
-      "broker",
+      "sfq",
+      "sfq",
       "broker",
       "sfq",
       "sfq",
       "sfq",
+      "broker",
       "sfq",
       "broker",
+      "sfq",
+      "sfq",
+      "broker",
+      "broker",
+      "broker",
+      "wfq",
+      "wfq",
       "broker"
     ]
   }
