@@ -309,6 +309,63 @@ def main():
     cv_df.to_csv(out_dir / "ML_results.csv", index=False)
     cv_summary.to_csv(out_dir / "ML_summary.csv", index=False)
 
+    try:
+        import matplotlib.pyplot as plt
+
+        print("\nGenerating plots...")
+
+        df_summary = pd.read_csv(out_dir / "ML_summary.csv")
+        df_cv = pd.read_csv(out_dir / "ML_results.csv")
+
+        df_plot = df_summary[["model", "top1_accuracy", "near_oracle_rate"]]
+        df_plot.set_index("model").plot(kind="bar")
+
+        plt.title("Model Performance Comparison")
+        plt.ylabel("Score")
+        plt.xticks(rotation=45)
+        plt.tight_layout()
+
+        plt.savefig(out_dir / "performance.png")
+        plt.close()
+
+        df_summary.set_index("model")["speedup_vs_best_fixed"].plot(kind="bar")
+
+        plt.title("Speedup vs Best-Fixed Queue")
+        plt.ylabel("Speedup")
+        plt.xticks(rotation=45)
+        plt.tight_layout()
+
+        plt.savefig(out_dir / "speedup.png")
+        plt.close()
+
+        df_summary.set_index("model")["avg_regret"].plot(kind="bar")
+
+        plt.title("Average Regret")
+        plt.ylabel("Regret")
+        plt.xticks(rotation=45)
+        plt.tight_layout()
+
+        plt.savefig(out_dir / "regret.png")
+        plt.close()
+
+        plt.figure()
+
+        df_cv.boxplot(column="top1_accuracy", by="model")
+
+        plt.title("Accuracy Across CV Folds")
+        plt.suptitle("")
+        plt.ylabel("Accuracy")
+        plt.xticks(rotation=45)
+        plt.tight_layout()
+
+        plt.savefig(out_dir / "cv_accuracy.png")
+        plt.close()
+
+        print("Plots saved to:", out_dir)
+
+    except Exception as e:
+        print("Plotting failed:", e)
+
 
 if __name__ == "__main__":
     main()
